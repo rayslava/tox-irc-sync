@@ -1,15 +1,13 @@
 import sys
 import socket
-import string
 import select
 import re
 import pickle
 
-from pytox import Tox, ToxAV
+from pytox import Tox
 
 from time import sleep
 from os.path import exists
-from threading import Thread
 
 SERVER = ['54.199.139.199', 33445, '7F9C31FE850E97CEFD4C4591DF93FC757C7C12549DDD55F8EEAECC34FE76C029']
 GROUP_BOT = '56A1ADE4B65B86BCD51CC73E2CD4E542179F47959FE3E0E21B4B0ACDADE51855D34D34D37CB5'
@@ -22,54 +20,11 @@ NAME = NICK = IDENT = REALNAME = 'SyncBot'
 CHANNEL = '#tox-ontopic'
 MEMORY_DB = 'memory.pickle'
 
-class AV(ToxAV):
-    def __init__(self, core, max_calls):
-        self.core = self.get_tox()
-        self.cs = None
-        self.call_type = self.TypeAudio
-
-    def on_invite(self, idx):
-        self.cs = self.get_peer_csettings(idx, 0)
-        self.call_type = self.cs['call_type']
-
-        print('Incoming %s call from %d:%s ...' % (
-                'video' if self.call_type == self.TypeVideo else 'audio', idx,
-                self.core.get_name(self.get_peer_id(idx, 0))))
-
-        self.answer(idx, self.call_type)
-        print('Answered, in call...')
-
-    def on_start(self, idx):
-        self.change_settings(idx, {'max_video_width': 1920,
-                                   'max_video_height': 1080})
-        self.prepare_transmission(idx, self.jbufdc * 2, self.VADd,
-                True if self.call_type == self.TypeVideo else False)
-
-    def on_end(self, idx):
-        self.kill_transmission()
-
-        print('Call ended')
-
-    def on_peer_timeout(self, idx):
-        self.stop_call()
-
-    def on_audio_data(self, idx, size, data):
-        sys.stdout.write('.')
-        sys.stdout.flush()
-        self.send_audio(idx, size, data)
-
-    def on_video_data(self, idx, width, height, data):
-        sys.stdout.write('*')
-        sys.stdout.flush()
-        self.send_video(idx, width, height, data)
-
-
 class SyncBot(Tox):
     def __init__(self):
         if exists('data'):
             self.load_from_file('data')
 
-        self.av = AV(self, 10)
         self.connect()
         self.set_name('SyncBot')
         self.set_status_message("Send me a message with the word 'invite'")
