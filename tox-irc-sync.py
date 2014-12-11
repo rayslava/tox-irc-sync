@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys
 import socket
 import select
@@ -15,6 +17,7 @@ PWD = ''
 
 IRC_HOST = 'irc.freenode.net'
 IRC_PORT = 6667
+IRC_CHARSET = 'UTF-8'
 NAME = NICK = IDENT = REALNAME = 'SyncBot'
 
 CHANNEL = '#tox-ontopic'
@@ -43,8 +46,9 @@ class SyncBot(Tox):
     def irc_init(self):
         self.irc = socket.socket()
         self.irc.connect((IRC_HOST, IRC_PORT))
-        self.irc.send('NICK %s\r\n' % NICK)
-        self.irc.send('USER %s %s bla :%s\r\n' % (IDENT, IRC_HOST, REALNAME))
+
+        self.irc.send(bytes('NICK %s\r\n' % NICK, IRC_CHARSET))
+        self.irc.send(bytes('USER %s %s bla :%s\r\n' % (IDENT, IRC_HOST, REALNAME), IRC_CHARSET))
 
     def connect(self):
         print('connecting...')
@@ -89,7 +93,7 @@ class SyncBot(Tox):
                 readable, _, _ = select.select([self.irc], [], [], 0.01)
 
                 if readable:
-                    self.readbuffer += self.irc.recv(4096)
+                    self.readbuffer += self.irc.recv(4096).decode(IRC_CHARSET)
                     lines = self.readbuffer.split('\n')
                     self.readbuffer = lines.pop()
 
@@ -115,11 +119,11 @@ class SyncBot(Tox):
 
                         l = line.rstrip().split()
                         if l[0] == 'PING':
-                           self.irc_send('PONG %s\r\n' % l[1])
+                           self.irc_send(bytes('PONG %s\r\n' % l[1], IRC_CHARSET))
                         if l[1] == '376':
-                           self.irc.send('PRIVMSG NickServ :IDENTIFY %s %s\r\n'
-                                   % (NICK, PWD))
-                           self.irc.send('JOIN %s\r\n' % CHANNEL)
+                           self.irc.send(bytes('PRIVMSG NickServ :IDENTIFY %s %s\r\n'
+                                   % (NICK, PWD), IRC_CHARSET))
+                           self.irc.send(bytes('JOIN %s\r\n' % CHANNEL, IRC_CHARSET))
 
                 self.do()
         except KeyboardInterrupt:
@@ -129,7 +133,7 @@ class SyncBot(Tox):
         success = False
         while not success:
             try:
-                self.irc.send(msg)
+                self.irc.send(bytes(msg, IRC_CHARSET))
                 success = True
                 break
             except socket.error:
