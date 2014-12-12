@@ -109,7 +109,7 @@ class SyncBot(Tox):
                         rx = re.match(r':(.*?)!.*? PRIVMSG %s :(.*?)\r' %
                                 CHANNEL, line, re.S)
                         if rx:
-                            print('IRC> %s: %s' % rx.groups())
+                            #print('IRC> %s: %s' % rx.groups())
                             msg = '[%s]: %s' % rx.groups()
                             content = rx.group(2)
 
@@ -164,7 +164,7 @@ class SyncBot(Tox):
     def on_group_message(self, groupnumber, friendgroupnumber, message):
         name = self.group_peername(groupnumber, friendgroupnumber)
         if len(name) and name != NAME:
-            print('TOX> %s: %s' % (name, message))
+            #print('TOX> %s: %s' % (name, message))
             if message.startswith('>'):
                 message = '\x0309%s\x03' % message
 
@@ -176,7 +176,7 @@ class SyncBot(Tox):
     def on_group_action(self, groupnumber, friendgroupnumber, action):
         name = self.group_peername(groupnumber, friendgroupnumber)
         if len(name) and name != NAME:
-            print('TOX> %s: %s' % (name, action))
+            #print('TOX> %s: %s' % (name, action))
             if action.startswith('>'):
                 action = '\x0309%s\x03' % action
             self.irc_send('PRIVMSG %s :\x01ACTION [%s]: %s\x01\r\n' %
