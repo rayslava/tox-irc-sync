@@ -5,6 +5,7 @@ import socket
 import select
 import re
 import pickle
+import struct
 
 from pytox import Tox
 
@@ -12,16 +13,23 @@ from time import sleep
 from os.path import exists
 
 SERVER = ['54.199.139.199', 33445, '7F9C31FE850E97CEFD4C4591DF93FC757C7C12549DDD55F8EEAECC34FE76C029']
-GROUP_BOT = '56A1ADE4B65B86BCD51CC73E2CD4E542179F47959FE3E0E21B4B0ACDADE51855D34D34D37CB5'
+GROUP_BOT = '21E2E5D1C3885A5D434DC47D8D2469DB602F3ED25AD1FF465F022A29C6ECFC338B3D531F5295'
 PWD = ''
 
-IRC_HOST = 'irc.freenode.net'
-IRC_PORT = 6667
+IRC_HOST = 'utf8.ircline.ru'
+IRC_PORT = 6665
 IRC_CHARSET = 'UTF-8'
-NAME = NICK = IDENT = REALNAME = 'SyncBot'
+NAME = NICK = IDENT = REALNAME = 'tox-SyncBot'
 
-CHANNEL = '#tox-ontopic'
+CHANNEL = '#linux'
 MEMORY_DB = 'memory.pickle'
+
+def unpack_int32(n):
+    try:
+        return struct.unpack('B',n[0])[0] + (struct.unpack('B', n[1])[0] << 8) +\
+            (struct.unpack('B',n[2])[0] << 16) + (struct.unpack('B', n[3])[0] << 24)
+    except TypeError:
+        return n[0]+(n[1]<<8)+(n[2]<<16)+(n[3]<<24)
 
 class SyncBot(Tox):
     def __init__(self):
@@ -119,7 +127,7 @@ class SyncBot(Tox):
 
                         l = line.rstrip().split()
                         if l[0] == 'PING':
-                           self.irc_send(bytes('PONG %s\r\n' % l[1], IRC_CHARSET))
+                           self.irc_send('PONG %s\r\n' % l[1])
                         if l[1] == '376':
                            self.irc.send(bytes('PRIVMSG NickServ :IDENTIFY %s %s\r\n'
                                    % (NICK, PWD), IRC_CHARSET))
@@ -147,10 +155,10 @@ class SyncBot(Tox):
             self.request = True
             self.ensure_exe(self.send_message, (self.bid, 'invite'))
 
-    def on_group_invite(self, friendid, pk):
+    def on_group_invite(self, friendid, pk, data):
         if not self.joined:
             self.joined = True
-            self.tox_group_id = self.join_groupchat(friendid, pk)
+            self.tox_group_id = self.join_groupchat(friendid, data)
             print('Joined groupchat.')
 
     def on_group_message(self, groupnumber, friendgroupnumber, message):
