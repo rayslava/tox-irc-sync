@@ -37,7 +37,7 @@ class SyncBot(Tox):
             self.load_from_file('data')
 
         self.connect()
-        self.set_name('SyncBot')
+        self.set_name(NAME)
         self.set_status_message("Send me a message with the word 'invite'")
         print('ID: %s' % self.get_address())
 
